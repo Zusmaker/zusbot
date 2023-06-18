@@ -1,0 +1,7 @@
+node_modules
+_backup/
+logs.json
+config.json
+_AppData.lnk
+_ZusPvPServer.lnk
+_ZusServerConfig.lnk

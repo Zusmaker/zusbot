@@ -1,0 +1,15 @@
+{
+  "name": "zusbot",
+  "version": "0.0.1",
+  "description": "Zus first Bot",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Zusdragon",
+  "license": "gpl-3.0",
+  "dependencies": {
+    "discord.js": "^14.11.0",
+    "discord.js-commando": "^0.12.3"
+  }
+}
