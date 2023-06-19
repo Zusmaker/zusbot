@@ -4,7 +4,8 @@
   "description": "Zus first Bot",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "setup" : "node deploy-commands.js",
+    "start": "node ."
   },
   "author": "Zusdragon",
   "license": "gpl-3.0",

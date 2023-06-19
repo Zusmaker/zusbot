@@ -35,6 +35,14 @@ module.exports = {
                         write = '' + lastline;
                         write += bwrite.join('\n');
 
+                        var sortedLines = write.split('\n').sort(function (line1, line2) {
+                            var num1 = parseFloat(line1.match(/^\d+\.\d+/));
+                            var num2 = parseFloat(line2.match(/^\d+\.\d+/));
+                            return num1 - num2;
+                        });
+
+                        write = sortedLines.join('\n');
+
                         fs.writeFile(logs.fileBuffer00, write, function (err) {
                             if (err) {
                                 return console.log(err);
@@ -49,7 +57,6 @@ module.exports = {
                     }, 100);
                 });
             });
-
         };
         function checkMap() {
             date = new Date().toLocaleString('pt-Br', { timeZone: 'America/Sao_Paulo' }).concat(' | ');
@@ -76,6 +83,12 @@ module.exports = {
             });
 
             function mapName(n) {
+                if (isBlank(maps[n])) {
+                    maps[n] = '[' + n + ']';
+                    fs.writeFile('./maps.json', JSON.stringify(maps, null, '\t'), 'utf-8', (err) => {
+                        if (err) throw err;
+                    });
+                };
                 return maps[n];
             };
         };
@@ -91,7 +104,7 @@ module.exports = {
                     if (e.indexOf('AddPlayerToSession') > -1) {
                         date = new Date().toLocaleString('pt-Br', { timeZone: 'America/Sao_Paulo' }).concat(' | ');
 
-                        var n = e.slice(e.indexOf('AddPlayerToSession(') + 19, e.indexOf(',mm='));
+                        var n = e.slice(e.indexOf('AddPlayerToSession(') + 19, e.indexOf(',mm='));
                         console.log(date + n + ' conectou-se a sessão.');
                         logchannel.send(`\`${date}${n} conectou-se a sessão.\``);
                     };
@@ -111,7 +124,7 @@ module.exports = {
                     if (e.indexOf('Server: Client') > -1 && e.indexOf('disconnected') > -1) {
                         date = new Date().toLocaleString('pt-Br', { timeZone: 'America/Sao_Paulo' }).concat(' | ');
 
-                        var n = e.slice(e.indexOf('Client ') + 8, e.indexOf('" disconnected'));
+                        var n = e.slice(e.indexOf('Client ') + 8, e.indexOf('" disconnected'));
                         console.log(date + n + ' desconectou-se a sessão.');
                         logchannel.send(`\`${date}${n} desconectou-se a sessão.\``);
                     };
@@ -156,8 +169,8 @@ module.exports = {
                         } else {
                             var death = e.slice(e.indexOf('[Info]: ') + 8, e.indexOf(' was killed by'));
                             var damage = e.slice(e.indexOf('killed by ') + 10, e.indexOf(' damage'));
-                            var kill = e.slice(e.indexOf('damage from ') + 12, e.indexOf(' using'));
-                            var source = killName(e.slice(e.indexOf(' using a ') + 10, e.length));
+                            var kill = e.slice(e.indexOf('damage from ') + 12, e.indexOf(' using'));
+                            var source = killName(e.slice(e.indexOf(' using a ') + 10, e.length));
 
                             if (kill == 'a level 20 TURRET') { kill = 'Mapa' };
 
