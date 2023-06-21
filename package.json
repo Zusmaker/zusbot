@@ -1,6 +1,6 @@
 {
   "name": "zusbot",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Zus first Bot",
   "main": "index.js",
   "scripts": {
