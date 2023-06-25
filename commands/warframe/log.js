@@ -17,8 +17,9 @@ module.exports = {
         //----------------------------------------------- log
         var { client } = require('../../index.js');
         var logchannel = client.channels.cache.get(logs.log_server);
-        var maps = require('../../maps.json');
-        var kills = require('../../kills.json');
+        var maps = require('./maps.json');
+        var sources = require('./sources.json');
+        //var serverData = require('./serverData.json');
         var currentMap = '';
         var fileBuffer = [logs.fileBuffer00, logs.fileBuffer01, logs.fileBuffer02, logs.fileBuffer03]
 
@@ -84,14 +85,14 @@ module.exports = {
             var tempo = 0;
             file.forEach(function (e) {
                 setTimeout(function () {
-                    if (e.indexOf('Loading /Lotus/Levels/PVP/') > -1 && e.indexOf('.level') > -1) {
+                    if (e.includes('Loading /Lotus/Levels/PVP/') && e.includes('.level')) {
                         date = new Date().toLocaleTimeString('pt-Br', { timeZone: 'America/Sao_Paulo' }).concat(' | ');
 
-                        var n = mapName((e.slice(e.indexOf('PVP/') + 4, e.indexOf('.level'))));
-                        if (n != currentMap) {
-                            console.log(fileIndex + date + '|Novo mapa será: ' + n + '.');
-                            logchannel.send(`:purple_square: ${fileIndex} | ${date} Novo mapa será: ${n}.`);
-                            currentMap = n;
+                        var mapName = mapsNames((e.slice(e.indexOf('PVP/') + 4, e.indexOf('.level'))));
+                        if (mapName != currentMap) {
+                            console.log(fileIndex + ' | ' + date + '|Novo mapa será: ' + mapName + '.');
+                            logchannel.send(`:purple_square: ${fileIndex} | ${date} Novo mapa será: ${mapName}.`);
+                            currentMap = mapName;
                         } else
                             return;
                     };
@@ -99,14 +100,14 @@ module.exports = {
                 tempo += 1019; // k
             });
 
-            function mapName(n) {
-                if (isBlank(maps[n])) {
-                    maps[n] = '[' + n + ']';
+            function mapsNames(mapName) {
+                if (isBlank(maps[mapName])) {
+                    maps[mapName] = '[' + mapName + ']';
                     fs.writeFile(logs.maps, JSON.stringify(maps, null, '\t'), 'utf-8', (err) => {
                         if (err) throw err;
                     });
                 };
-                return maps[n];
+                return maps[mapName];
             };
         };
         function checkIn(fileIndex) {
@@ -118,12 +119,13 @@ module.exports = {
             var tempo = 0;
             file.forEach(function (e) {
                 setTimeout(function () {
-                    if (e.indexOf('AddPlayerToSession') > -1) {
+                    if (e.includes('AddPlayerToSession')) {
                         date = new Date().toLocaleTimeString('pt-Br', { timeZone: 'America/Sao_Paulo' }).concat(' | ');
 
-                        var n = e.slice(e.indexOf('AddPlayerToSession(') + 19, e.indexOf(',mm='));
-                        console.log(fileIndex + date + n + ' conectou-se a sessão.');
-                        logchannel.send(`:green_square: ${fileIndex} | ${date} ${n} conectou-se a sessão.`);
+                        var playerName = e.slice(e.indexOf('AddPlayerToSession(') + 19, e.indexOf(',mm='));
+
+                        console.log(fileIndex + ' | ' + date + playerName + ' conectou-se a sessão.');
+                        logchannel.send(`:green_square: ${fileIndex} | ${date} ${playerName} conectou-se a sessão.`);
                     };
                 }, tempo);
                 tempo += 1019; // k
@@ -138,12 +140,12 @@ module.exports = {
             var tempo = 0;
             file.forEach(function (e) {
                 setTimeout(function () {
-                    if (e.indexOf('Server: Client') > -1 && e.indexOf('disconnected') > -1) {
+                    if (e.includes('Server: Client') && e.includes('disconnected')) {
                         date = new Date().toLocaleTimeString('pt-Br', { timeZone: 'America/Sao_Paulo' }).concat(' | ');
 
-                        var n = e.slice(e.indexOf('Client ') + 8, e.indexOf('" disconnected'));
-                        console.log(fileIndex + date + n + ' desconectou-se a sessão.');
-                        logchannel.send(`:red_square: ${fileIndex} | ${date} ${n} desconectou-se a sessão.`);
+                        var playerName = e.slice(e.indexOf('Client ') + 8, e.indexOf('" disconnected'));
+                        console.log(fileIndex + ' | ' + date + playerName + ' desconectou-se a sessão.');
+                        logchannel.send(`:red_square: ${fileIndex} | ${date} ${playerName} desconectou-se a sessão.`);
                     };
                 }, tempo);
                 tempo += 1019; // k
@@ -158,56 +160,66 @@ module.exports = {
             var tempo = 0;
             file.forEach(function (e) {
                 setTimeout(function () {
-                    if (e.indexOf('was killed') > -1 && e.indexOf('using a') > -1) {
+                    if (e.includes(' was killed ') && e.includes(' using a ')) {
                         date = new Date().toLocaleTimeString('pt-Br', { timeZone: 'America/Sao_Paulo' }).concat(' | ');
-
-                        if (e.indexOf('/Layer') > -1 || e.indexOf('DamageTrigger') > -1) {
+                        
+                        if (e.includes('/Layer') || e.includes('DamageTrigger')) {
                             var death = e.slice(e.indexOf('[Info]: ') + 8, e.indexOf(' was killed by'));
                             var damage = e.slice(e.indexOf('killed by ') + 10, e.indexOf(' damage'));
                             var kill = 'Mapa';
                             var source = '???';
-                            if (e.indexOf('/Layer4') > -1) {
-                                if (e.indexOf('DamageTrigger3') > -1) {
+
+                            if (e.includes('/Layer4')) {
+                                if (e.includes('DamageTrigger3')) {
                                     source = 'Environment';
                                 } else {
                                     source = 'Grineer Poison';
                                 }
-                            } else if (e.indexOf('/Layer1/DamageTrigger0') > -1) {
+                            } else if (e.includes('/Layer1/DamageTrigger0')) {
                                 source = 'Electric Floor';
-                            } else if (e.indexOf('/Layer1/DamageTrigger1') > -1) {
+                            } else if (e.includes('/Layer1/DamageTrigger1')) {
                                 source = 'Fire';
-                            } else if (e.indexOf('/Layer2/CorpusCoreLaserBeam') > -1) {
-                                soruce = 'Corpus Laser Beam';
+                            } else if (e.includes('/Layer2/CorpusCoreLaserBeam')) {
+                                source = 'Corpus Laser Beam';
                             } else {
                                 source = 'Environment';
                             };
 
-                            console.log(fileIndex + date + death + ' foi morto pelo ' + kill + ' usando ' + source + ' com dano de ' + damage + '. MAP');
+                            console.log(fileIndex + ' | ' + date + death + ' foi morto pelo ' + kill + ' usando ' + source + ' com dano de ' + damage + '. MAP');
                             logchannel.send(`:brown_square: ${fileIndex} | ${date}:hotsprings: ${death} foi morto pelo ${kill} usando ${source} com dano de ${damage}.`);
                         } else {
-                            var death = e.slice(e.indexOf('[Info]: ') + 8, e.indexOf(' was killed by'));
+                            var death = e.slice(e.indexOf('Game [Info]: ') + 13, e.indexOf(' was killed by '));
                             var damage = e.slice(e.indexOf('killed by ') + 10, e.indexOf(' damage'));
-                            var kill = e.slice(e.indexOf('damage from ') + 12, e.indexOf(' using'));
+                            var kill = e.slice(e.indexOf('damage from ') + 12, e.indexOf(' using a '));
                             var source = killName(e.slice(e.indexOf(' using a ') + 9, e.length));
 
-                            if (kill == 'a level 20 TURRET') { kill = 'Mapa' };
+                            if (kill == 'a level 20 TURRET') { kill = 'GnrBunkerTurret' };
 
-                            console.log(fileIndex + date + death + ' foi morto pelo ' + kill + ' usando ' + source + ' com dano de ' + damage + '. GUN');
+                            console.log(fileIndex + ' | ' + date + death + ' foi morto pelo ' + kill + ' usando ' + source + ' com dano de ' + damage + '. GUN');
                             logchannel.send(`:yellow_square: ${fileIndex} | ${date}:crossed_swords: ${death} foi morto pelo ${kill} usando ${source} com dano de ${damage}.`);
                         };
+                    } else if (e.includes(' was killed ')) {
+                        var death = e.slice(e.indexOf('Game [Info]: ') + 13, e.indexOf(' was killed by '));
+                        var damage = e.slice(e.indexOf('killed by ') + 10, e.indexOf(' damage'));
+                        var kill = e.slice(e.indexOf('damage from ') + 12);
+                        var source = 'Bullet Jump';
+
+                        console.log(fileIndex + ' | ' + date + death + ' foi morto pelo ' + kill + ' usando ' + source + ' com dano de ' + damage + '. JUMP');
+                        logchannel.send(`:yellow_square: ${fileIndex} | ${date}:crutch: ${death} foi morto pelo ${kill} usando ${source} com dano de ${damage}.`);
+
                     };
                 }, tempo);
                 tempo += 519; //! k
             });
 
             function killName(n) {
-                if (isBlank(kills[n])) {
-                    kills[n] = '[' + n + ']';
-                    fs.writeFile(logs.kills, JSON.stringify(kills, null, '\t'), 'utf-8', (err) => {
+                if (isBlank(sources[n])) {
+                    sources[n] = '[' + n + ']';
+                    fs.writeFile(logs.sources, JSON.stringify(sources, null, '\t'), 'utf-8', (err) => {
                         if (err) throw err;
                     });
                 };
-                return kills[n];
+                return sources[n];
             };
         };
 

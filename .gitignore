@@ -1,6 +1,10 @@
 node_modules
 _backup/
 logs.json
+playerData.json
+serverData.json
+maps.json
+sources.json
 config.json
 _AppData.lnk
 _ZusPvPServer.lnk
