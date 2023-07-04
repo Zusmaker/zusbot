@@ -37,24 +37,13 @@ module.exports = {
                         console.log(date + `ヽ(#ﾟДﾟ)ﾉ┌┛ LOG ${file} NON ECZISTE!`);
                         return;
                     };
-
+                    lastline = "";
                     fs.open(file, 'r', function (err, fd) {
                         if (err) {
                             console.log('ヽ(#ﾟДﾟ)ﾉ┌┛ Erro ao abrir o arquivo:', err);
                             return;
                         };
-
                         if (index === 0) {
-                            function getStartTime(line) {
-                                try {
-                                    var time = line.slice(32, line.indexOf(' [UTC'));
-                                    return new Date(time).getTime();
-                                } catch (e) {
-                                    console.log("Sヽ(#ﾟДﾟ)ﾉ┌┛ Inicie os servers primeiro!");
-                                    process.exit();
-                                };
-                            };
-
                             fs.readFile(file, 'utf8', function (err, data) {
                                 if (err) {
                                     console.log('ヽ(#ﾟДﾟ)ﾉ┌┛ Erro ao ler o arquivo:', err);
@@ -70,14 +59,13 @@ module.exports = {
                                 console.log(`Server Start: ${startTime} milisegundos`);
                             });
                         };
-
                         fs.watchFile(file, function (cstat, pstat) {
                             var delta = cstat.size - pstat.size;
                             if (delta <= 0) return;
                             fs.read(fd, new Buffer.alloc(delta), 0, delta, pstat.size, function (err, bytes, buffer) {
                                 bwrite = buffer.toString().replace(/(\r\n|\r|\n)/g, '\n').split('\n');
-                                lastline = bwrite.pop();
                                 write = '' + lastline;
+                                lastline = bwrite.pop();
                                 write += bwrite.join('\n');
 
                                 var sortedLines = write.split('\n').sort(function (line1, line2) {
@@ -85,7 +73,6 @@ module.exports = {
                                     var num2 = parseFloat(line2.match(/^\d+\.\d+/));
                                     return num1 - num2;
                                 });
-
                                 write = sortedLines.join('\n');
 
                                 fs.writeFile(fileBuffer[index], write, function (err) {
@@ -179,7 +166,6 @@ module.exports = {
                         var playerName = e.slice(e.indexOf('Client ') + 8, e.indexOf('" disconnected'));
                         console.log(fileIndex + ' | ' + date + ' | ' + playerName + ' desconectou-se a sessão.');
                         logchannel.send(`:red_square: ${fileIndex} | ${date} | ${playerName} desconectou-se a sessão.`);
-                        updateData(fileIndex, date, 'Out');
                     };
                 }, tempo);
                 tempo += 1019; // k
@@ -261,14 +247,14 @@ module.exports = {
             kills.forEach(function (e) {
                 setTimeout(function () {
                     if (e.killer == "Mapa") {
-                        console.log(fileIndex + ' | ' + e.date + ' | ' + e.killer + ' matou ' + e.death + ' com ' + e.source + ', com dano de: ' + e.dmg + ' [máx.: ' + e.dmgmax + ' ]');
-                        logchannel.send(`:brown_square: ${fileIndex} | ${e.date} | :hotsprings: ${e.killer} matou ${e.death} com ${e.source}, com dano de: ${e.dmg} [máx.: ${e.dmgmax} ].`);
+                        console.log(fileIndex + ' | ' + e.date + ' | ' + e.killer + ' matou ' + e.death + ' com ' + e.source + ', com dano de: ' + e.dmg + ' [máx.: ' + e.dmgmax + ']');
+                        logchannel.send(`:brown_square: ${fileIndex} | ${e.date} | :hotsprings: ${e.killer} matou ${e.death} com ${e.source}, com dano de: ${e.dmg} [máx.: ${e.dmgmax}].`);
                     } else if (e.source == "Bullet Jump") {
-                        console.log(fileIndex + ' | ' + e.date + ' | ' + e.killer + ' matou ' + e.death + ' com ' + e.source + ', com dano de: ' + e.dmg + ' [máx.: ' + e.dmgmax + ' ]');
-                        logchannel.send(`:yellow_square: ${fileIndex} | ${e.date} | :mechanical_leg: ${e.killer} matou ${e.death} com ${e.source}, com dano de: ${e.dmg} [máx.: ${e.dmgmax} ].`);
+                        console.log(fileIndex + ' | ' + e.date + ' | ' + e.killer + ' matou ' + e.death + ' com ' + e.source + ', com dano de: ' + e.dmg + ' [máx.: ' + e.dmgmax + ']');
+                        logchannel.send(`:yellow_square: ${fileIndex} | ${e.date} | :mechanical_leg: ${e.killer} matou ${e.death} com ${e.source}, com dano de: ${e.dmg} [máx.: ${e.dmgmax}].`);
                     } else {
                         console.log(fileIndex + ' | ' + e.date + ' | ' + e.killer + ' matou ' + e.death + ' com ' + e.source + ', com dano de: ' + e.dmg + ' [máx.: ' + e.dmgmax + ' ]');
-                        logchannel.send(`:yellow_square: ${fileIndex} | ${e.date} | :crossed_swords: ${e.killer} matou ${e.death} com ${e.source}, com dano de: ${e.dmg} [máx.: ${e.dmgmax} ].`);
+                        logchannel.send(`:yellow_square: ${fileIndex} | ${e.date} | :crossed_swords: ${e.killer} matou ${e.death} com ${e.source}, com dano de: ${e.dmg} [máx.: ${e.dmgmax}].`);
                     };
                     updateData(fileIndex, date, 'Kill');
                 }, tempo);
@@ -278,7 +264,7 @@ module.exports = {
 
         function updateData(fileIndex,date,tipo) {
             var hora = new Date(date).getHours();
-            var dia = new Date(date).getDay();
+            var dia = funfaDay(date);
             var partida = '';
             var horario = '';
             /*
@@ -345,11 +331,6 @@ module.exports = {
                     serverData[partida].totalIn++;
                     serverData[partida][dia][horario].In++;
                     break;
-                case 'Out':
-                    console.log(`++Out`);
-                    serverData[partida].totalOut++;
-                    serverData[partida][dia][horario].Out++;
-                    break;
                 case 'Kill':
                     console.log(`++Kill`);
                     serverData[partida].totalKill++;
@@ -359,6 +340,33 @@ module.exports = {
             fs.writeFile(logs.serverData, JSON.stringify(serverData, null, '\t'), 'utf-8', (err) => {
                 if (err) throw err;
             });
+        };
+        function funfaDay(dataString){
+            // ヽ(#ﾟДﾟ)ﾉ┌┛ mm/dd/yyyy para getDay()
+            const partes = dataString.split(' ');
+            const dataPartes = partes[0].split('/');
+            const horaPartes = partes[1].split(':');
+
+            const dia = parseInt(dataPartes[0], 10);
+            const mes = parseInt(dataPartes[1], 10) - 1;
+            const ano = parseInt(dataPartes[2], 10);
+            const hora = parseInt(horaPartes[0], 10);
+            const minutos = parseInt(horaPartes[1], 10);
+            const segundos = parseInt(horaPartes[2], 10);
+
+            const data = new Date(ano, mes, dia, hora, minutos, segundos);
+            const diaSemana = data.getDay();
+
+            return diaSemana;
+        }
+        function getStartTime(line) {
+            try {
+                var time = line.slice(32, line.indexOf(' [UTC'));
+                return new Date(time).getTime();
+            } catch (e) {
+                console.log("Sヽ(#ﾟДﾟ)ﾉ┌┛ Inicie os servers primeiro!");
+                process.exit();
+            };
         };
         function killName(n) {
             if (isBlank(sources[n])) {
