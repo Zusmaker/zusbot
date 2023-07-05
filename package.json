@@ -1,7 +1,7 @@
 {
   "name": "zusbot",
-  "version": "0.1.0",
-  "description": "Zus first Bot",
+  "version": "0.2.0",
+  "description": "Este é ZusBot, que foi criado como hobbie/curiosidade, depois se tornou ferramenta de estudos de progração e continua sendo até hoje o 'GigaChadBot'",
   "main": "index.js",
   "scripts": {
     "setup" : "node deploy-commands.js",
